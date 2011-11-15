@@ -142,7 +142,6 @@ BOOL csvParserProcessField(const char *value, unsigned int column, void *csvPars
 
 - (void)dealloc
 {
-	self.delegate = nil;
 	[csv release];
 	[columnNames release];
 	[super dealloc];
@@ -189,17 +188,17 @@ BOOL csvParserProcessField(const char *value, unsigned int column, void *csvPars
 				columnNames = [NSMutableArray array];
 				if(!processCSVLine([line UTF8String], csvParserProcessField, self, 0))
 				{
-					if([(NSObject *)parserDelegate respondsToSelector:@selector(parser:parseErrorOccurred:)])
-						[parserDelegate parser:self parseErrorOccurred:[NSError errorWithDomain:CSV_DOMAIN code:CSV_ERROR_BADFORMAT userInfo:nil]];
 					delegate = parserDelegate;
+					if([(NSObject *)delegate respondsToSelector:@selector(parser:parseErrorOccurred:)])
+						[delegate parser:self parseErrorOccurred:[NSError errorWithDomain:CSV_DOMAIN code:CSV_ERROR_BADFORMAT userInfo:nil]];
 					line = nil;
 					return;
 				}
 				if(expectedColumnsCount && ([columnNames count] != expectedColumnsCount))
 				{
-					if([(NSObject *)parserDelegate respondsToSelector:@selector(parser:parseErrorOccurred:)])
-						[parserDelegate parser:self parseErrorOccurred:[NSError errorWithDomain:CSV_DOMAIN code:CSV_ERROR_BADHEADER userInfo:nil]];
 					delegate = parserDelegate;
+					if([(NSObject *)delegate respondsToSelector:@selector(parser:parseErrorOccurred:)])
+						[delegate parser:self parseErrorOccurred:[NSError errorWithDomain:CSV_DOMAIN code:CSV_ERROR_BADHEADER userInfo:nil]];
 					line = nil;
 					return;
 				}

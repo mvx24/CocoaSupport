@@ -38,7 +38,7 @@
 	NSInteger columnNumber;
 }
 
-@property (nonatomic, retain) id <CSVParserDelegate> delegate;
+@property (nonatomic, assign) id <CSVParserDelegate> delegate;
 
 - (id)initWithString:(NSString *)csvDocument;
 - (void)dealloc;
