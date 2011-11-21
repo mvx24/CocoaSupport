@@ -61,12 +61,12 @@ BOOL processCSVLine(const char *csvLine, BOOL (*processField)(const char *, unsi
 		{
 			*endPtr = 0;
 			// Skip leading and trailing whitespace
-			while((*startPtr == ' ') || (*startPtr == '\t')) ++startPtr;
+			while((*startPtr == ' ') || (*startPtr == '\t') || (*startPtr == '\r') || (*startPtr == '\n')) ++startPtr;
 			if(startPtr != endPtr)
 				newEndPtr = endPtr - 1;
 			else
 				newEndPtr = endPtr;
-			while((*newEndPtr == ' ') || (*newEndPtr == '\t')) --newEndPtr;
+			while((*newEndPtr == ' ') || (*newEndPtr == '\t') || (*newEndPtr == '\r') || (*newEndPtr == '\n')) --newEndPtr;
 			if((*startPtr == '"') && (*newEndPtr == '"'))
 			{
 				*newEndPtr = 0;
@@ -84,12 +84,12 @@ BOOL processCSVLine(const char *csvLine, BOOL (*processField)(const char *, unsi
 		}
 	}
 	// Process the last field, skipping leading and trailing whitespace
-	while((*startPtr == ' ') || (*startPtr == '\t')) ++startPtr;
+	while((*startPtr == ' ') || (*startPtr == '\t') || (*startPtr == '\r') || (*startPtr == '\n')) ++startPtr;
 	if(startPtr != endPtr)
 		newEndPtr = endPtr - 1;
 	else
 		newEndPtr = endPtr;
-	while((*newEndPtr == ' ') || (*newEndPtr == '\t')) --newEndPtr;
+	while((*newEndPtr == ' ') || (*newEndPtr == '\t') || (*newEndPtr == '\r') || (*newEndPtr == '\n')) --newEndPtr;
 	if((*startPtr == '"') && (*newEndPtr == '"'))
 	{
 		*newEndPtr = 0;
@@ -140,67 +140,116 @@ BOOL csvParserProcessField(const char *value, unsigned int column, void *csvPars
 	return self;
 }
 
+- (void)cleanup
+{
+	[columnNames release];
+	columnNames = nil;
+	lineNumber = 0;
+	csvStr = NULL;
+	if(lineBuffer != NULL)
+		free(lineBuffer);
+	lineBuffer = NULL;
+	lineBufferSize = 0;
+}
+
 - (void)dealloc
 {
 	[csv release];
-	[columnNames release];
+	[self cleanup];
 	[super dealloc];
 }
 
-- (void)parse
+- (BOOL)getNextLine
 {
-	NSArray *csvLines = nil;
+	const char *ptr;
+	BOOL quotes = NO;
+	size_t lineSize;
+	
+	if(!*csvStr)
+		return NO;
+	
+	// Find the complete line, ignoring line breaks inside quotes
+	ptr = csvStr;
+	while(1)
+	{
+		for(; *ptr && (*ptr != '\r') && (*ptr != '\n'); ++ptr)
+		{
+			if(*ptr == '"')
+			{
+				if(quotes && (*(ptr + 1) == '"'))
+					++ptr;
+				else
+					quotes = !quotes;
+			}
+		}
+		if(quotes && *ptr)
+		{
+			++ptr;
+			continue;
+		}
+		break;
+	}
+	
+	// Copy the line into a buffer
+	lineSize = (ptr - csvStr) + 1;
+	if(lineBufferSize < lineSize)
+	{
+		lineBufferSize = lineSize;
+		if(lineBuffer != NULL)
+			free(lineBuffer);
+		lineBuffer = (char *)malloc(sizeof(char) * lineBufferSize);
+	}
+	
+	memcpy(lineBuffer, csvStr, lineSize - 1);
+	lineBuffer[lineSize - 1] = 0;
+	
+	// Advance to the start of the next line
+	for(csvStr = ptr; ((*csvStr == '\r') || (*csvStr == '\n')); ++csvStr);
+	
+	return YES;
+}
 
+- (BOOL)parse
+{
 	if(self.delegate != nil)
 	{
 		if(![csv length])
 		{
 			if([(NSObject *)self.delegate respondsToSelector:@selector(parser:parseErrorOccurred:)])
 				[self.delegate parser:self parseErrorOccurred:[NSError errorWithDomain:CSV_DOMAIN code:CSV_ERROR_NODATA userInfo:nil]];
-			return;
+			return NO;
 		}
 		
-		[line release];
-		line = nil;
+		// Start of parsing
 		lineNumber = 0;
+		csvStr = [csv UTF8String];
 		if([(NSObject *)self.delegate respondsToSelector:@selector(parserDidStartDocument:)])
 			[self.delegate parserDidStartDocument:self];
 		
-		// Start of parsing
-		NSRange range = [csv rangeOfString:@"\n"];
-		if((range.location != NSNotFound) && (range.location > 0))
-		{
-			if([csv characterAtIndex:(range.location - 1)] == '\r')
-				csvLines = [csv componentsSeparatedByString:@"\r\n"];
-		}
-		if(csvLines == nil)
-			csvLines = [csv componentsSeparatedByString:@"\n"];
-		
 		// Parsing
-		for(NSString *csvLine in csvLines)
+		while([self getNextLine])
 		{
-			line = csvLine;
 			if(expectHeaders && (columnNames == nil))
 			{
 				id <CSVParserDelegate> parserDelegate = delegate;
 				// Parse the first line to retrieve the headers
 				delegate = (id<CSVParserDelegate>)self;
 				columnNames = [NSMutableArray array];
-				if(!processCSVLine([line UTF8String], csvParserProcessField, self, 0))
+				if(!processCSVLine(lineBuffer, csvParserProcessField, self, 0))
 				{
 					delegate = parserDelegate;
 					if([(NSObject *)delegate respondsToSelector:@selector(parser:parseErrorOccurred:)])
 						[delegate parser:self parseErrorOccurred:[NSError errorWithDomain:CSV_DOMAIN code:CSV_ERROR_BADFORMAT userInfo:nil]];
-					line = nil;
-					return;
+					[self cleanup];
+					return NO;
 				}
 				if(expectedColumnsCount && ([columnNames count] != expectedColumnsCount))
 				{
 					delegate = parserDelegate;
 					if([(NSObject *)delegate respondsToSelector:@selector(parser:parseErrorOccurred:)])
 						[delegate parser:self parseErrorOccurred:[NSError errorWithDomain:CSV_DOMAIN code:CSV_ERROR_BADHEADER userInfo:nil]];
-					line = nil;
-					return;
+					[self cleanup];
+					return NO;
 				}
 				// Restore the delegate and count the columns
 				delegate = parserDelegate;
@@ -211,12 +260,12 @@ BOOL csvParserProcessField(const char *value, unsigned int column, void *csvPars
 			{
 				if([(NSObject *)self.delegate respondsToSelector:@selector(parserDidStartLine:)])
 					[self.delegate parserDidStartLine:self];
-				if(!processCSVLine([line UTF8String], csvParserProcessField, self, expectedColumnsCount))
+				if(!processCSVLine(lineBuffer, csvParserProcessField, self, expectedColumnsCount))
 				{
 					if([(NSObject *)self.delegate respondsToSelector:@selector(parser:parseErrorOccurred:)])
 						[self.delegate parser:self parseErrorOccurred:[NSError errorWithDomain:CSV_DOMAIN code:CSV_ERROR_BADFORMAT userInfo:nil]];
-					line = nil;
-					return;
+					[self cleanup];
+					return NO;
 				}
 				if([(NSObject *)self.delegate respondsToSelector:@selector(parserDidEndLine:)])
 					[self.delegate parserDidEndLine:self];
@@ -227,13 +276,10 @@ BOOL csvParserProcessField(const char *value, unsigned int column, void *csvPars
 		// End of parsing
 		if([(NSObject *)self.delegate respondsToSelector:@selector(parserDidEndDocument:)])
 			[self.delegate parserDidEndDocument:self];
-		
-		//Cleanup
-		[columnNames release];
-		columnNames = nil;
-		line = nil;
-		lineNumber = 0;
+		[self cleanup];
+		return YES;
 	}
+	return NO;
 }
 
 - (void)setExpectedColumnsCount:(NSUInteger)expected
@@ -253,7 +299,7 @@ BOOL csvParserProcessField(const char *value, unsigned int column, void *csvPars
 
 - (NSString *)line
 {
-	return line;
+	return [[[NSString alloc] initWithUTF8String:lineBuffer] autorelease];
 }
 
 - (NSInteger)lineNumber

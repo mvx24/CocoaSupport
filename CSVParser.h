@@ -28,12 +28,15 @@
 {
 	id <CSVParserDelegate> delegate;
 @private
+	const char *csvStr;
+	char *lineBuffer;
+	size_t lineBufferSize;
+	
 	NSString *csv;
 	NSUInteger expectedColumnsCount;
 	BOOL expectHeaders;
 	
 	NSArray *columnNames;
-	NSString *line;
 	NSInteger lineNumber;
 	NSInteger columnNumber;
 }
@@ -42,7 +45,7 @@
 
 - (id)initWithString:(NSString *)csvDocument;
 - (void)dealloc;
-- (void)parse;
+- (BOOL)parse;
 
 - (void)setExpectedColumnsCount:(NSUInteger)expected;
 - (void)setIsExpectingColumnsHeader:(BOOL)expecting;
