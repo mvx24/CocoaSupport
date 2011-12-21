@@ -13,6 +13,7 @@
 @synthesize action;
 @synthesize success;
 @synthesize result;
+@synthesize userInfo;
 
 - (id)initWithTarget:(id)theTarget selector:(SEL)theAction
 {

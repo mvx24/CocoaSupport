@@ -27,7 +27,7 @@ BOOL processCSVLine(const char *csvLine, BOOL (*processField)(const char *, unsi
 	char *ptr, *startPtr, *endPtr, *newEndPtr;
 	BOOL quotes = NO;
 	unsigned int field = 0;
-	unsigned int len = strlen(csvLine);
+	unsigned int len = (unsigned int)strlen(csvLine);
 	char *lineCopy;
 	
 	// Allocate a copy buffer that is double the size of the string
@@ -123,6 +123,7 @@ BOOL csvParserProcessField(const char *value, unsigned int column, void *csvPars
 	{
 		stringValue = [[NSString alloc] initWithBytes:value length:strlen(value) encoding:NSUTF8StringEncoding];
 		[parser.delegate parser:parser didParseValue:stringValue];
+		[stringValue release];
 	}
 	return YES;
 }
