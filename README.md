@@ -1,6 +1,6 @@
 ##Symbiotic Software Cocoa Support Code
 
-	Copyright (c) 2011, Symbiotic Software LLC
+	Copyright (c) 2012, Symbiotic Software LLC
 	All rights reserved.
 	
 	Redistribution and use in source and binary forms, with or without
@@ -28,3 +28,6 @@
 
 ###ClientLogin
 ClientLogin code for authenticating against google.
+
+###NSStringAddition
+NSString additions. Some methods more complete than others.
