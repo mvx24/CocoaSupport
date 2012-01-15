@@ -26,5 +26,5 @@
 	SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
-###CSVParser
-The CSVParser class acts like the NSXMLParser for parsing CSV data.
+###ClientLogin
+ClientLogin code for authenticating against google.
