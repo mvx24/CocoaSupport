@@ -12,4 +12,7 @@
 - (NSString *)stringByCapitalizingFirstCharacter;
 - (NSString *)stringByDecapitalizingFirstCharacter;
 
+- (NSUInteger)unsignedIntegerValue;
+- (unsigned int)unsignedIntValue;
+
 @end

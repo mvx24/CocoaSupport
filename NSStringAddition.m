@@ -5,6 +5,7 @@
 //
 
 #import "NSStringAddition.h"
+#include <stdlib.h>
 
 @implementation NSString (Addition)
 
@@ -89,6 +90,16 @@
 	firstChar = [self substringToIndex:1];
 	str = [self substringFromIndex:1];
 	return [[firstChar lowercaseString] stringByAppendingString:str];
+}
+
+- (NSUInteger)unsignedIntegerValue
+{
+	return (NSUInteger)strtoul([self UTF8String], NULL, 10);
+}
+
+- (unsigned int)unsignedIntValue
+{
+	return strtoul([self UTF8String], NULL, 10);
 }
 
 @end
