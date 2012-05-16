@@ -102,4 +102,9 @@
 	return strtoul([self UTF8String], NULL, 10);
 }
 
+- (unsigned long long)unsignedLongLongValue
+{
+	return strtoull([self UTF8String], NULL, 10);
+}
+
 @end

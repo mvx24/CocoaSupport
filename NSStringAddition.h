@@ -14,5 +14,6 @@
 
 - (NSUInteger)unsignedIntegerValue;
 - (unsigned int)unsignedIntValue;
+- (unsigned long long)unsignedLongLongValue;
 
 @end
