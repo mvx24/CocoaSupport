@@ -33,7 +33,7 @@
 		}
 		else
 		{
-			NSArray *subarray1, subarray2;
+			NSArray *subarray1, *subarray2;
 			range.location = 0;
 			range.length = index;
 			subarray1 = [self subarrayWithRange:range];
