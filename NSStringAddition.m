@@ -92,6 +92,16 @@
 	return [[firstChar lowercaseString] stringByAppendingString:str];
 }
 
+// This gets invoked instead of boolValue for key-values.
+// Use full strings such as "true" or "false" to avoid return 'f' for false
+- (char)charValue
+{
+	if([self length] > 1)
+		return [self boolValue];
+	else
+		return (char)[self characterAtIndex:0];
+}
+
 - (NSUInteger)unsignedIntegerValue
 {
 	return (NSUInteger)strtoul([self UTF8String], NULL, 10);
