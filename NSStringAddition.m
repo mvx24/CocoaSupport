@@ -92,6 +92,45 @@
 	return [[firstChar lowercaseString] stringByAppendingString:str];
 }
 
++ (id)stringWithHexString:(NSString *)hexString
+{
+	NSMutableString *unhexString;
+	char hexChar[3] = {0};
+	const char *bytes;
+	size_t i, length;
+	
+	length = [hexString length];
+	if(!length)
+		return [NSString string];
+	
+	bytes = [hexString UTF8String];
+	unhexString = [NSMutableString stringWithCapacity:[hexString length]/2];
+	for(i = 0; i < length; i += 2)
+	{
+		hexChar[0] = bytes[i];
+		hexChar[1] = bytes[i+1];
+		[unhexString appendFormat:@"%c", (char)strtol(hexChar, NULL, 16)];
+	}
+	return [NSString stringWithString:unhexString];
+}
+
+- (NSString *)hexString
+{
+	NSMutableString *hexString;
+	const char *bytes;
+	size_t i, length;
+	
+	length = [self length];
+	if(!length)
+		return [NSString string];
+	
+	bytes = [self UTF8String];
+	hexString = [NSMutableString stringWithCapacity:length * 2];
+	for(i = 0; i < length; ++i)
+		[hexString appendFormat:@"%02x", *(bytes + i)];
+	return [NSString stringWithString:hexString];
+}
+
 // This gets invoked instead of boolValue for key-values.
 // Use full strings such as "true" or "false" to avoid return 'f' for false
 - (char)charValue

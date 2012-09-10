@@ -11,6 +11,8 @@
 - (NSString *)stringByEscapingForURLQuery;
 - (NSString *)stringByCapitalizingFirstCharacter;
 - (NSString *)stringByDecapitalizingFirstCharacter;
++ (id)stringWithHexString:(NSString *)hexString;
+- (NSString *)hexString;
 
 - (char)charValue;
 - (NSUInteger)unsignedIntegerValue;
