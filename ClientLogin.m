@@ -1,8 +1,7 @@
 //
 //  ClientLogin.m
 //
-//  Created by Marc on 11/18/11.
-//  Copyright 2011 Symbiotic Software LLC. All rights reserved.
+//  Copyright 2013 Symbiotic Software LLC. All rights reserved.
 //
 
 #import "ClientLogin.h"
