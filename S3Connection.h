@@ -20,22 +20,22 @@ typedef void (^S3CompletionHandler)(NSError *);
 
 - (id)initWithAccessKeyId:(NSString *)accessKeyId secretAccessKey:(NSString *)secretAccessKey;
 - (void)cancelCurrentRequest;
-- (void)putData:(NSData *)data securely:(BOOL)securely withKey:(NSString *)key contentType:(NSString *)contentType completionHandler:(S3CompletionHandler)completionHandler;
-- (void)putFile:(NSString *)path securely:(BOOL)securely withKey:(NSString *)key completionHandler:(S3CompletionHandler)completionHandler;
-
-+ (void)uploadFile:(NSString *)path
-		  securely:(BOOL)securely
-		intoBucket:(NSString *)bucket
-		   withKey:(NSString *)key
-	   accessKeyId:(NSString *)accessKeyId
-   secretAccessKey:(NSString *)secretAccessKey
- completionHandler:(S3CompletionHandler)completionHandler;
+- (void)uploadData:(NSData *)data securely:(BOOL)securely withKey:(NSString *)key contentType:(NSString *)contentType completionHandler:(S3CompletionHandler)completionHandler;
+- (void)uploadFile:(NSString *)path securely:(BOOL)securely withKey:(NSString *)key completionHandler:(S3CompletionHandler)completionHandler;
 
 + (void)uploadData:(NSData *)data
 		  securely:(BOOL)securely
 		intoBucket:(NSString *)bucket
 		   withKey:(NSString *)key
 	   contentType:(NSString *)contentType
+	   accessKeyId:(NSString *)accessKeyId
+   secretAccessKey:(NSString *)secretAccessKey
+ completionHandler:(S3CompletionHandler)completionHandler;
+
++ (void)uploadFile:(NSString *)path
+		  securely:(BOOL)securely
+		intoBucket:(NSString *)bucket
+		   withKey:(NSString *)key
 	   accessKeyId:(NSString *)accessKeyId
    secretAccessKey:(NSString *)secretAccessKey
  completionHandler:(S3CompletionHandler)completionHandler;

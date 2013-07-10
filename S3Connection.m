@@ -31,6 +31,7 @@
 
 - (NSString *)authorizationHeader:(NSString *)verb withMD5:(NSString *)md5 contentType:(NSString *)contentType date:(NSString *)date resource:(NSString *)resource;
 - (NSString *)dateHeader;
+- (NSString *)mimeType:(NSString *)path;
 
 @end
 
@@ -115,7 +116,31 @@
 	return [dateFormatter stringFromDate:[NSDate date]];
 }
 
-- (void)putData:(NSData *)data securely:(BOOL)securely withKey:(NSString *)key contentType:(NSString *)contentType completionHandler:(S3CompletionHandler)completionHandler
+- (NSString *)mimeType:(NSString *)path
+{
+	CFStringRef uti, mime;
+	NSString *contentType = nil;
+	NSString *extension;
+
+	extension = [path pathExtension];
+	if([extension length])
+	{
+		uti = UTTypeCreatePreferredIdentifierForTag(kUTTagClassFilenameExtension, (CFStringRef)extension, NULL);
+		if(uti)
+		{
+			mime = UTTypeCopyPreferredTagWithClass(uti, kUTTagClassMIMEType);
+			if(mime)
+			{
+				contentType = [NSString stringWithString:(NSString *)mime];
+				CFRelease(mime);
+			}
+			CFRelease(uti);
+		}
+	}
+	return contentType;
+}
+
+- (void)uploadData:(NSData *)data securely:(BOOL)securely withKey:(NSString *)key contentType:(NSString *)contentType completionHandler:(S3CompletionHandler)completionHandler
 {
 	NSURL *url;
 	NSMutableURLRequest *request;
@@ -136,6 +161,8 @@
 	[self cancelCurrentRequest];
 	
 	// Calculate the MD5 and other headers
+	if(![contentType length])
+		contentType = [self mimeType:key];
 	CC_MD5_Init(&ctx);
 	CC_MD5_Update(&ctx, [data bytes], [data length]);
 	CC_MD5_Final(hash, &ctx);
@@ -172,13 +199,12 @@
 	}
 }
 
-- (void)putFile:(NSString *)path securely:(BOOL)securely withKey:(NSString *)key completionHandler:(S3CompletionHandler)completionHandler
+- (void)uploadFile:(NSString *)path securely:(BOOL)securely withKey:(NSString *)key completionHandler:(S3CompletionHandler)completionHandler
 {
 	NSInputStream *inputStream;
 	NSURL *url;
 	NSMutableURLRequest *request;
-	NSString *extension, *contentType = nil;
-	CFStringRef uti, mime;
+	NSString *contentType = nil;
 	NSString *md5;
 	NSString *authorization;
 	NSString *date;
@@ -205,25 +231,9 @@
 	
 	[self retain];
 	[self cancelCurrentRequest];
-	
-	// Determine the content type
-	extension = [path pathExtension];
-	if([extension length])
-	{
-		uti = UTTypeCreatePreferredIdentifierForTag(kUTTagClassFilenameExtension, (CFStringRef)extension, NULL);
-		if(uti)
-		{
-			mime = UTTypeCopyPreferredTagWithClass(uti, kUTTagClassMIMEType);
-			if(mime)
-			{
-				contentType = [NSString stringWithString:(NSString *)mime];
-				CFRelease(mime);
-			}
-			CFRelease(uti);
-		}
-	}
-	
+
 	// Calculate the MD5 and other headers
+	contentType = [self mimeType:path];
 	CC_MD5_Init(&ctx);
 	[inputStream open];
 	while((len = [inputStream read:buf maxLength:sizeof(buf)]) > 0)
@@ -271,7 +281,7 @@
 	S3Connection *s3connection;
 	s3connection = [[[S3Connection alloc] initWithAccessKeyId:accessKeyId secretAccessKey:secretAccessKey] autorelease];
 	s3connection.bucket = bucket;
-	[s3connection putData:data securely:securely withKey:key contentType:contentType completionHandler:completionHandler];
+	[s3connection uploadData:data securely:securely withKey:key contentType:contentType completionHandler:completionHandler];
 }
 
 + (void)uploadFile:(NSString *)path securely:(BOOL)securely intoBucket:(NSString *)bucket withKey:(NSString *)key accessKeyId:(NSString *)accessKeyId secretAccessKey:(NSString *)secretAccessKey completionHandler:(S3CompletionHandler)completionHandler
@@ -279,7 +289,7 @@
 	S3Connection *s3connection;
 	s3connection = [[[S3Connection alloc] initWithAccessKeyId:accessKeyId secretAccessKey:secretAccessKey] autorelease];
 	s3connection.bucket = bucket;
-	[s3connection putFile:path securely:securely withKey:key completionHandler:completionHandler];
+	[s3connection uploadFile:path securely:securely withKey:key completionHandler:completionHandler];
 }
 
 #pragma mark - NSURLConnectionDelegate methods
