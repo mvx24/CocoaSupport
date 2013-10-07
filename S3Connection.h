@@ -4,6 +4,7 @@
 //  Copyright 2013 Symbiotic Software LLC. All rights reserved.
 //
 //  A simple S3 class to upload files. Be sure to also link with CommonCrypto, MobileCoreServices, and compile NSDataAddition.
+//  NOTE: When uploading, do not start keys with a /
 //
 
 #import <Foundation/Foundation.h>
