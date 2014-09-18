@@ -148,7 +148,7 @@
 
 - (unsigned int)unsignedIntValue
 {
-	return strtoul([self UTF8String], NULL, 10);
+	return (unsigned int)strtoul([self UTF8String], NULL, 10);
 }
 
 - (unsigned long long)unsignedLongLongValue
