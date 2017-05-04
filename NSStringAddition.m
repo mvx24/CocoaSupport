@@ -43,9 +43,12 @@
 
 - (NSString *)stringByEscapingForURLQuery
 {
+	return [self stringByAddingPercentEncodingWithAllowedCharacters:NSCharacterSet.URLQueryAllowedCharacterSet];
+/*
 	NSString *result = (NSString *)CFURLCreateStringByAddingPercentEscapes(kCFAllocatorDefault, (CFStringRef)self, NULL, CFSTR("!*'();:@&=$,/?#^[]+\"{}<>`\\ "), kCFStringEncodingUTF8);
 	return [result autorelease];
-	/*																														  
+*/
+/*
 	NSMutableString *str;
 	NSRange range;
 	NSCharacterSet *escapeSet;
@@ -71,7 +74,7 @@
 	}
 	
 	return str;
-	 */
+*/
 }
 
 - (NSString *)stringByCapitalizingFirstCharacter
